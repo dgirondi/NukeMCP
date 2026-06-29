@@ -1,10 +1,6 @@
+.venv/
 __pycache__/
 *.pyc
-.venv/
 *.egg-info/
 .pytest_cache/
 .DS_Store
-*.nk~
-*.autosave
-.claude/
-*.mcpb

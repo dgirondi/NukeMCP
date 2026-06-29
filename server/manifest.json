@@ -1,0 +1,47 @@
+{
+  "manifest_version": "0.4",
+  "name": "nukemcp",
+  "display_name": "NukeMCP",
+  "version": "0.1.0",
+  "description": "Inspect and control a running Nuke 17 session",
+  "long_description": "NukeMCP gives Claude tools to inspect and control a running Nuke 17 session: query and edit the node graph, render, take screenshots, save/open scripts, and run arbitrary Python inside Nuke.\n\nThis extension installs the standalone MCP server only. A separate addon must also be installed inside Nuke itself -- add the NukeMCP repo's `nuke_addon/` directory to your `NUKE_PATH` and start Nuke. See the repo's docs/INSTALL.md for the full addon setup step; without it running, every tool will report a clear connection error.",
+  "author": {
+    "name": "Diogo Girondi"
+  },
+  "server": {
+    "type": "uv",
+    "entry_point": "src/nukemcp/__init__.py",
+    "mcp_config": {
+      "command": "uv",
+      "args": [
+        "run",
+        "nukemcp"
+      ],
+      "env": {
+        "NUKEMCP_HOST": "${user_config.nuke_host}",
+        "NUKEMCP_PORT": "${user_config.nuke_port}"
+      }
+    }
+  },
+  "user_config": {
+    "nuke_host": {
+      "type": "string",
+      "title": "Nuke addon host",
+      "description": "Host the NukeMCP Nuke addon is listening on. Leave as default unless you changed NUKEMCP_HOST on the addon side.",
+      "default": "127.0.0.1",
+      "required": false
+    },
+    "nuke_port": {
+      "type": "number",
+      "title": "Nuke addon port",
+      "description": "Port the NukeMCP Nuke addon is listening on. Leave as default unless you changed NUKEMCP_PORT on the addon side.",
+      "default": 9787,
+      "required": false
+    }
+  },
+  "compatibility": {
+    "runtimes": {
+      "python": ">=3.10"
+    }
+  }
+}

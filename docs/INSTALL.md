@@ -18,7 +18,24 @@ Restart your shell (or `source ~/.zshrc`), then launch Nuke. You should see a "N
 
 The listener auto-starts by default. To disable auto-start and use the menu's "Start Server" entry manually instead, set `NUKEMCP_AUTOSTART=0` in the same environment.
 
-## 2. Install the MCP server's Python dependencies
+## 2. Install the MCP server
+
+Two ways to do this — pick one.
+
+### Option A: Claude Desktop extension (easiest)
+
+`server/` is packaged as a Claude Desktop Extension (`.mcpb` bundle, built with Anthropic's `@anthropic-ai/mcpb` packer). Build it once:
+
+```bash
+cd /Volumes/Vault/Projects/Dev/Nuke/NukeMCP
+npx @anthropic-ai/mcpb pack server nukemcp.mcpb
+```
+
+Then double-click `nukemcp.mcpb` (or use Claude Desktop's "install extension from file") to install it. Claude Desktop runs `uv run nukemcp` itself using its own bundled `uv` — no manual venv setup, no system Python dependency. If you ever moved the addon's `NUKEMCP_HOST`/`NUKEMCP_PORT` off the defaults, set the matching values in the extension's settings in Claude Desktop (exposed as "Nuke addon host"/"Nuke addon port").
+
+This only installs the **server-side** half — step 1 above (the Nuke addon + `NUKE_PATH`) is still required regardless of which install method you use here.
+
+### Option B: manual venv (for Claude Code, or if you don't use the Desktop extension flow)
 
 ```bash
 cd /Volumes/Vault/Projects/Dev/Nuke/NukeMCP/server
@@ -36,6 +53,8 @@ This installs a `nukemcp` console script and makes `python -m nukemcp` work. Con
 ```
 
 ## 3. Register the server with your MCP client
+
+(Skip this section if you installed via the Claude Desktop extension above — that registers itself.)
 
 Use the **absolute path to the venv's interpreter** — MCP client host processes typically don't inherit your interactive shell's `PATH`, so a bare `nukemcp` command will fail even though it works fine in your terminal.
 

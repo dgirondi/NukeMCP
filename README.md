@@ -21,7 +21,7 @@ nuke_addon/  (running inside Nuke 17's own process)
 
 ## Setup
 
-See [docs/INSTALL.md](docs/INSTALL.md).
+See [docs/INSTALL.md](docs/INSTALL.md). `server/` is also packaged as a Claude Desktop Extension (`.mcpb`) for one-click installation of the server half — build it with `npx @anthropic-ai/mcpb pack server nukemcp.mcpb`. Either way, the Nuke-side addon still needs its own separate `NUKE_PATH` setup.
 
 ## Available tools
 
