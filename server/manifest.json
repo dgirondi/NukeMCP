@@ -8,6 +8,7 @@
   "author": {
     "name": "Diogo Girondi"
   },
+  "icon": "icon.png",
   "server": {
     "type": "uv",
     "entry_point": "src/nukemcp/__init__.py",
