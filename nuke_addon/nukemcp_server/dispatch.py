@@ -18,6 +18,10 @@ to whoever called executeInMainThreadWithResult.
 
 _HANDLERS = {}
 
+# Guards against a "batch" request recursively containing another "batch".
+# Safe as a plain module-level bool: all handlers run on the single main thread.
+_batch_active = False
+
 
 def register_handler(name):
     def _decorator(func):
@@ -38,9 +42,19 @@ def handle(request):
         return {"ok": False, "message": str(exc), "error_type": type(exc).__name__}
 
 
+def _handle_one(tool_name, params):
+    """Call a handler directly (no envelope wrapping). Used by batch."""
+    handler = _HANDLERS.get(tool_name)
+    if handler is None:
+        raise KeyError("no such tool: {!r}".format(tool_name))
+    return handler(params)
+
+
 def _load_handlers():
     # Importing these modules triggers their @register_handler decorators.
     from .handlers import (  # noqa: F401
+        animation,
+        diagnostics,
         execute,
         graph,
         nodes,
@@ -48,7 +62,58 @@ def _load_handlers():
         script_info,
         script_io,
         selection,
+        viewer,
     )
+    # batch is defined inline below after _HANDLERS is populated.
+    _register_batch()
+
+
+def _register_batch():
+    import nuke
+
+    @register_handler("batch")
+    def batch(params):
+        """Execute multiple tool operations as a single undoable action.
+
+        Each operation is `{"tool": "<name>", "params": {...}}`.
+        If stop_on_error is true, execution halts on the first failure.
+        The whole batch is wrapped in one undo group named by `label`.
+        """
+        global _batch_active
+        if _batch_active:
+            raise RuntimeError("nested batch calls are not supported")
+
+        operations = params.get("operations") or []
+        stop_on_error = bool(params.get("stop_on_error", False))
+        label = str(params.get("label", "batch"))
+
+        results = []
+        _batch_active = True
+        try:
+            with nuke.UndoGroup("NukeMCP: {}".format(label)):
+                for op in operations:
+                    tool_name = op.get("tool", "")
+                    op_params = op.get("params") or {}
+                    try:
+                        result = _handle_one(tool_name, op_params)
+                        results.append({"ok": True, "tool": tool_name, "result": result})
+                    except Exception as exc:
+                        results.append({
+                            "ok": False,
+                            "tool": tool_name,
+                            "error_type": type(exc).__name__,
+                            "message": str(exc),
+                        })
+                        if stop_on_error:
+                            break
+        finally:
+            _batch_active = False
+
+        return {
+            "results": results,
+            "count": len(results),
+            "all_ok": all(r["ok"] for r in results),
+        }
 
 
 _load_handlers()

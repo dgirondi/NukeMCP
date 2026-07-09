@@ -5,22 +5,37 @@ from nukemcp.connection import send_request
 
 def register(mcp: FastMCP) -> None:
     @mcp.tool()
-    def list_nodes(filter_class: str | None = None) -> dict:
+    def list_nodes(
+        filter_class: str | None = None,
+        recurse_groups: bool = False,
+    ) -> dict:
         """List all nodes in the current script (name, class, position, selection state).
 
         Args:
-            filter_class: optional Nuke node class name, e.g. "Blur", to only list nodes of that class.
+            filter_class: optional Nuke node class name, e.g. "Blur", to only list
+                          nodes of that class.
+            recurse_groups: if True, also list nodes inside Group nodes.
         """
-        return send_request("list_nodes", {"filter_class": filter_class})
+        return send_request("list_nodes", {
+            "filter_class": filter_class,
+            "recurse_groups": recurse_groups,
+        })
 
     @mcp.tool()
-    def get_node_graph(filter_class: str | None = None) -> dict:
+    def get_node_graph(
+        filter_class: str | None = None,
+        recurse_groups: bool = False,
+    ) -> dict:
         """Like list_nodes, but also includes each node's input/output connections by name.
 
         Args:
             filter_class: optional Nuke node class name to only include nodes of that class.
+            recurse_groups: if True, also include nodes inside Group nodes.
         """
-        return send_request("get_node_graph", {"filter_class": filter_class})
+        return send_request("get_node_graph", {
+            "filter_class": filter_class,
+            "recurse_groups": recurse_groups,
+        })
 
     @mcp.tool()
     def get_node_info(node_name: str) -> dict:

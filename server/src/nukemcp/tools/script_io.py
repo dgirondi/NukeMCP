@@ -29,3 +29,16 @@ def register(mcp: FastMCP) -> None:
         if not os.path.isabs(path):
             raise ValueError("path must be absolute: {!r}".format(path))
         return send_request("save_script", {"path": path})
+
+    @mcp.tool()
+    def merge_script(path: str) -> dict:
+        """Import nodes from another .nk file into the current script without
+        replacing it. The imported nodes are added to the existing graph.
+        Undoable.
+
+        Args:
+            path: absolute path to the .nk file to import.
+        """
+        if not os.path.isabs(path):
+            raise ValueError("path must be absolute: {!r}".format(path))
+        return send_request("merge_script", {"path": path})

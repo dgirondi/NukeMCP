@@ -4,10 +4,16 @@ from ..dispatch import register_handler
 from .knob_serialization import serialize_all_knobs
 
 
-def _iter_nodes(filter_class):
-    for node in nuke.allNodes():
-        if filter_class and node.Class() != filter_class:
-            continue
+def _iter_nodes(filter_class, recurse_groups=False):
+    try:
+        if filter_class:
+            nodes = nuke.allNodes(filter_class, recurseGroups=recurse_groups)
+        else:
+            nodes = nuke.allNodes(recurseGroups=recurse_groups)
+    except TypeError:
+        # Older Nuke builds that don't accept recurseGroups
+        nodes = nuke.allNodes(filter_class) if filter_class else nuke.allNodes()
+    for node in nodes:
         yield node
 
 
@@ -24,14 +30,16 @@ def _node_summary(node):
 @register_handler("list_nodes")
 def list_nodes(params):
     filter_class = params.get("filter_class")
-    return {"nodes": [_node_summary(n) for n in _iter_nodes(filter_class)]}
+    recurse_groups = bool(params.get("recurse_groups", False))
+    return {"nodes": [_node_summary(n) for n in _iter_nodes(filter_class, recurse_groups)]}
 
 
 @register_handler("get_node_graph")
 def get_node_graph(params):
     filter_class = params.get("filter_class")
+    recurse_groups = bool(params.get("recurse_groups", False))
     nodes = []
-    for node in _iter_nodes(filter_class):
+    for node in _iter_nodes(filter_class, recurse_groups):
         summary = _node_summary(node)
         inputs = []
         for i in range(node.inputs()):
