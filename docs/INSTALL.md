@@ -35,33 +35,29 @@ Then double-click `nukemcp.mcpb` (or use Claude Desktop's "install extension fro
 
 This only installs the **server-side** half — step 1 above (the Nuke addon + `NUKE_PATH`) is still required regardless of which install method you use here.
 
-### Option B: manual venv (for Claude Code, or if you don't use the Desktop extension flow)
+### Option B: uv (for Claude Code, or if you don't use the Desktop extension flow)
+
+Install [`uv`](https://docs.astral.sh/uv/) if you don't already have it (`brew install uv` on macOS), then:
 
 ```bash
 cd /Volumes/Vault/Projects/Dev/Nuke/NukeMCP/server
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
+uv sync --extra dev
 ```
 
-(If you have [`uv`](https://docs.astral.sh/uv/) installed, `uv venv && uv pip install -e ".[dev]"` is faster and equivalent.)
-
-This installs a `nukemcp` console script and makes `python -m nukemcp` work. Confirm with:
+uv resolves dependencies from the committed `uv.lock` and creates a `.venv` automatically. Confirm with:
 
 ```bash
-.venv/bin/python -m nukemcp --help 2>&1 | head -1   # should start the server (Ctrl+C to stop)
+uv run nukemcp --help 2>&1 | head -1   # should start the server (Ctrl+C to stop)
 ```
 
 ## 3. Register the server with your MCP client
 
 (Skip this section if you installed via the Claude Desktop extension above — that registers itself.)
 
-Use the **absolute path to the venv's interpreter** — MCP client host processes typically don't inherit your interactive shell's `PATH`, so a bare `nukemcp` command will fail even though it works fine in your terminal.
-
 **Claude Code:**
 
 ```bash
-claude mcp add nukemcp -- /Volumes/Vault/Projects/Dev/Nuke/NukeMCP/server/.venv/bin/python -m nukemcp
+claude mcp add nukemcp -- uv --directory /Volumes/Vault/Projects/Dev/Nuke/NukeMCP/server run nukemcp
 ```
 
 **Claude Desktop / any client using a `claude_desktop_config.json`-style config:**
@@ -70,8 +66,8 @@ claude mcp add nukemcp -- /Volumes/Vault/Projects/Dev/Nuke/NukeMCP/server/.venv/
 {
   "mcpServers": {
     "nukemcp": {
-      "command": "/Volumes/Vault/Projects/Dev/Nuke/NukeMCP/server/.venv/bin/python",
-      "args": ["-m", "nukemcp"]
+      "command": "uv",
+      "args": ["--directory", "/Volumes/Vault/Projects/Dev/Nuke/NukeMCP/server", "run", "nukemcp"]
     }
   }
 }
