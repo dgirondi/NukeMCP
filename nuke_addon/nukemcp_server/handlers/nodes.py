@@ -6,6 +6,36 @@ import nuke
 from ..dispatch import register_handler
 from .graph import _node_summary
 
+# ---------------------------------------------------------------------------
+# Node-class normalisation: map common aliases / misspellings to real names.
+# Keys are lower-cased so the lookup is always case-insensitive.
+# ---------------------------------------------------------------------------
+_NODE_CLASS_ALIASES = {
+    "merge":           "Merge2",
+    "colorcorrection": "ColorCorrect",
+    "color":           "Grade",
+    "gaussian":        "Blur",
+    "gaussianblur":    "Blur",
+    "premultiply":     "Premult",
+    "unpremultiply":   "Unpremult",
+    "move":            "Transform",
+    "position":        "Transform",
+    "rectangle":       "Crop",
+    "cropnode":        "Crop",
+    "output":          "Write",
+    "input":           "Read",
+    "3dmerge":         "GeomMerge",
+    "geometrymerge":   "GeomMerge",
+    "scanline":        "ScanlineRender",
+    "lensdistort":     "LensDistortion",
+    "text":            "Text2",
+}
+
+
+def _normalize_node_class(node_class):
+    """Return the canonical Nuke class name, resolving common aliases."""
+    return _NODE_CLASS_ALIASES.get(node_class.lower(), node_class)
+
 
 def _require_node(node_name):
     node = nuke.toNode(node_name)
@@ -44,7 +74,7 @@ _MERGE_CLASSES = frozenset([
 
 @register_handler("create_node")
 def create_node(params):
-    node_class = params["node_class"]
+    node_class = _normalize_node_class(params["node_class"])
     user_knobs = params.get("knobs") or {}
 
     with nuke.UndoGroup("NukeMCP: create_node"):
@@ -82,6 +112,9 @@ def create_node(params):
     result["knobs_applied"] = applied
     result["knob_errors"] = knob_errors
     result["input_errors"] = input_errors
+    # Report when an alias was resolved to a different class name
+    if node_class != params["node_class"]:
+        result["node_class_resolved"] = node_class
     return result
 
 

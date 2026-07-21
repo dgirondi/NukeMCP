@@ -59,6 +59,7 @@ def _load_handlers():
         graph,
         layout,
         nodes,
+        templates,
         render,
         script_info,
         script_io,

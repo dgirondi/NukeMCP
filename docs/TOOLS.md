@@ -27,7 +27,7 @@ All tools that modify the script (create, edit, delete, connect, animate, batch)
 
 | Tool | Params | Notes |
 |---|---|---|
-| `create_node` | `node_class: str`, `knobs?: dict`, `xpos?/ypos?: int`, `inputs?: list[str]` | Per-knob and per-input errors collected and returned. Write/WriteGeo/DeepWrite nodes get `create_directories=True` automatically unless explicitly overridden |
+| `create_node` | `node_class: str`, `knobs?: dict`, `xpos?/ypos?: int`, `inputs?: list[str]` | Per-knob and per-input errors collected and returned. Write-type nodes get `create_directories=True` automatically. Common aliases are normalised (`"merge"` → `"Merge2"`, `"color"` → `"Grade"`, `"output"` → `"Write"`, etc.) |
 | `set_knob_values` | `node_name: str`, `knobs: dict` | Same partial-failure behavior as `create_node` |
 | `connect_nodes` | `from_node: str`, `to_node: str`, `input_index: int = 0` | B-pipe guardrail: first connection to a Merge-type node at index 0 is automatically routed to index 1 (B / background) if B is unconnected. Result includes `auto_corrected: true` and a note when this fires |
 | `delete_node` | `node_name: str` | |
@@ -46,6 +46,7 @@ All tools that modify the script (create, edit, delete, connect, animate, batch)
 
 | Tool | Params | Notes |
 |---|---|---|
+| `create_viewer` | `connect_to?: str`, `xpos?/ypos?: int` | Create a Viewer node, optionally connected to an existing node. Useful for session setup |
 | `get_viewer_node` | — | Active Viewer node info: what it's connected to, current frame, gain, gamma |
 | `set_viewer_input` | `node_name: str`, `input_index: int = 0` | Connect a node to the Viewer (input 0 = A, 1 = B) |
 | `zoom_to_node` | `node_name: str` | Pan and zoom the Node Graph to centre on the given node |
@@ -61,7 +62,7 @@ All tools that modify the script (create, edit, delete, connect, animate, batch)
 
 | Tool | Params | Notes |
 |---|---|---|
-| `render` | `node_name?: str`, `first_frame: int`, `last_frame: int` | Renders all Write nodes if `node_name` omitted. Blocks until done (or 60s timeout). `success`/`error` is authoritative; `stdout`/`stderr` is supplementary |
+| `render` | `node_name?: str`, `first_frame?: int`, `last_frame?: int`, `frame_range?: str`, `proxy_mode?: bool` | Renders all Write nodes if `node_name` omitted. `frame_range` accepts compound specs like `"1-5,7,9-12"`. `proxy_mode=True` enables Nuke proxy for this render only. Blocks until done |
 | `get_node_screenshot` | `node_name: str`, `frame?: int` | Renders one frame via a temporary Write node, returns it as an inline image |
 
 ## Script I/O
@@ -86,4 +87,10 @@ Use `batch` when building multi-node graphs: one undo group, one round trip.
 
 | Tool | Params | Notes |
 |---|---|---|
-| `execute_nuke_code` | `code: str` | Runs arbitrary Python on Nuke's main thread with full `nuke`-API-plus-filesystem access. Assign to `__result__` to return a value; stdout/stderr are captured. Prefer structured tools — see [SECURITY.md](SECURITY.md) |
+| `execute_nuke_code` | `code: str` | Runs arbitrary Python on Nuke's main thread. Blocked patterns (filesystem deletion, process exit, shell exec) are rejected before reaching Nuke. Assign to `__result__` to return a value. Prefer structured tools — see [SECURITY.md](SECURITY.md) |
+
+## Templates
+
+| Tool | Params | Notes |
+|---|---|---|
+| `create_workflow_template` | `template_type: str`, `connect_to?: str`, `xpos?/ypos?: int`, `add_backdrop?: bool` | Instantiate a pre-wired compositing subgraph. Templates: `keying`, `color_correction`, `lens_distortion`, `3d_simple`. All undoable. Accepts `connect_to` to wire in an existing node as the template's input |

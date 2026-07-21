@@ -15,6 +15,34 @@ def _active_viewer_node():
     return viewers[0] if viewers else None
 
 
+@register_handler("create_viewer")
+def create_viewer(params):
+    """Create a Viewer node, optionally connected to an existing node."""
+    connect_name = params.get("connect_to")
+    xpos = params.get("xpos")
+    ypos = params.get("ypos")
+
+    with nuke.UndoGroup("NukeMCP: create_viewer"):
+        viewer = nuke.createNode("Viewer", inpanel=False)
+        if xpos is not None:
+            viewer.setXpos(int(xpos))
+        if ypos is not None:
+            viewer.setYpos(int(ypos))
+
+        if connect_name:
+            connect_node = nuke.toNode(connect_name)
+            if connect_node is None:
+                raise LookupError("no such node: {!r}".format(connect_name))
+            viewer.setInput(0, connect_node)
+
+    return {
+        "name": viewer.name(),
+        "connected_to": connect_name,
+        "xpos": viewer.xpos(),
+        "ypos": viewer.ypos(),
+    }
+
+
 @register_handler("get_viewer_node")
 def get_viewer_node(params):
     viewer = _active_viewer_node()

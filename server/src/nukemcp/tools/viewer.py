@@ -5,6 +5,27 @@ from nukemcp.connection import send_request
 
 def register(mcp: FastMCP) -> None:
     @mcp.tool()
+    def create_viewer(
+        connect_to: str | None = None,
+        xpos: int | None = None,
+        ypos: int | None = None,
+    ) -> dict:
+        """Create a Viewer node in the script, optionally connected to an existing node.
+
+        Useful for session setup: after creating a node graph, call this once
+        to add a viewer and wire it to the final output node.
+
+        Args:
+            connect_to: optional node name to connect to the Viewer's input.
+            xpos, ypos: optional position in the Node Graph.
+        """
+        return send_request("create_viewer", {
+            "connect_to": connect_to,
+            "xpos": xpos,
+            "ypos": ypos,
+        })
+
+    @mcp.tool()
     def get_viewer_node() -> dict:
         """Get info about the currently active Viewer node: what it's connected
         to, the current frame, and gain/gamma settings."""
