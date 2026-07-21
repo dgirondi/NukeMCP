@@ -49,4 +49,9 @@ def set_project_settings(params):
             root["format"].setValue(v)
             changed["format"] = v
 
+        if "current_frame" in params:
+            v = int(params["current_frame"])
+            nuke.frame(v)
+            changed["current_frame"] = v
+
     return {"changed": changed}

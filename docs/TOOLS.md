@@ -8,7 +8,7 @@ All tools that modify the script (create, edit, delete, connect, animate, batch)
 
 | Tool | Params | Returns |
 |---|---|---|
-| `get_script_info` | — | Root knobs: frame range, fps, format, script path, modified flag |
+| `get_script_info` | — | Root knobs: frame range, fps, format, script path, modified flag. Use `set_project_settings(current_frame=N)` to move the playhead |
 | `list_nodes` | `filter_class?: str`, `recurse_groups?: bool` | `name`, `class`, `xpos`/`ypos`, `selected` for every node |
 | `get_node_graph` | `filter_class?: str`, `recurse_groups?: bool` | Like `list_nodes`, plus `inputs` (connected node names by input index) and `outputs` |
 | `get_node_info` | `node_name: str` | Full knob dump for one node. Each knob reports `value`, `animated` (bool), and `expression` (text or null) |
@@ -27,9 +27,9 @@ All tools that modify the script (create, edit, delete, connect, animate, batch)
 
 | Tool | Params | Notes |
 |---|---|---|
-| `create_node` | `node_class: str`, `knobs?: dict`, `xpos?/ypos?: int`, `inputs?: list[str]` | Per-knob and per-input errors collected and returned, rather than aborting on first failure |
+| `create_node` | `node_class: str`, `knobs?: dict`, `xpos?/ypos?: int`, `inputs?: list[str]` | Per-knob and per-input errors collected and returned. Write/WriteGeo/DeepWrite nodes get `create_directories=True` automatically unless explicitly overridden |
 | `set_knob_values` | `node_name: str`, `knobs: dict` | Same partial-failure behavior as `create_node` |
-| `connect_nodes` | `from_node: str`, `to_node: str`, `input_index: int = 0` | |
+| `connect_nodes` | `from_node: str`, `to_node: str`, `input_index: int = 0` | B-pipe guardrail: first connection to a Merge-type node at index 0 is automatically routed to index 1 (B / background) if B is unconnected. Result includes `auto_corrected: true` and a note when this fires |
 | `delete_node` | `node_name: str` | |
 | `duplicate_node` | `node_name: str`, `xpos_offset: int = 100`, `ypos_offset: int = 0` | Copies all knob values via script round-trip |
 | `select_nodes` | `node_names: list[str]`, `additive: bool = False` | Clears existing selection first unless `additive` |
@@ -49,6 +49,13 @@ All tools that modify the script (create, edit, delete, connect, animate, batch)
 | `get_viewer_node` | — | Active Viewer node info: what it's connected to, current frame, gain, gamma |
 | `set_viewer_input` | `node_name: str`, `input_index: int = 0` | Connect a node to the Viewer (input 0 = A, 1 = B) |
 | `zoom_to_node` | `node_name: str` | Pan and zoom the Node Graph to centre on the given node |
+| `viewer_playback` | `action: str`, `frame?: int` | Control playback: `play`, `stop`, `next`, `prev`, `backward`, `goto` (goto requires `frame`). Continuous play/stop uses Nuke 13+ API; frame stepping is always reliable |
+
+## Layout
+
+| Tool | Params | Notes |
+|---|---|---|
+| `organize_node_graph` | `selected_only?: bool = False` | Sort nodes into coloured backdrop lanes (INPUTS / PREP / KEY / COLOR / FX / MERGE / OUTPUT / MISC). Repositions all non-backdrop nodes into parallel vertical columns. Fully undoable |
 
 ## Rendering
 

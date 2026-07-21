@@ -30,9 +30,22 @@ def _apply_knobs(node, knobs):
     return applied, errors
 
 
+# Write-like nodes for which create_directories should default to True
+_WRITE_CLASSES = frozenset(["Write", "WriteGeo", "DeepWrite"])
+
+# Merge-type nodes where input 1 is the B (background) pipe
+_MERGE_CLASSES = frozenset([
+    "Merge", "Merge2", "Plus", "Screen", "Min", "Max", "Multiply",
+    "Exclusion", "From", "Dissolve",
+    "Matte", "Stencil", "Mask", "Over", "Under", "Atop", "Out",
+    "GeomMerge", "DeepMerge",
+])
+
+
 @register_handler("create_node")
 def create_node(params):
     node_class = params["node_class"]
+    user_knobs = params.get("knobs") or {}
 
     with nuke.UndoGroup("NukeMCP: create_node"):
         node = nuke.createNode(node_class, inpanel=False)
@@ -44,7 +57,18 @@ def create_node(params):
         if ypos is not None:
             node.setYpos(int(ypos))
 
-        applied, knob_errors = _apply_knobs(node, params.get("knobs"))
+        applied, knob_errors = _apply_knobs(node, user_knobs)
+
+        # Guardrail: auto-enable create_directories on Write nodes so renders
+        # never fail with a "directory does not exist" error.
+        if node.Class() in _WRITE_CLASSES and "create_directories" not in user_knobs:
+            cd = node.knob("create_directories")
+            if cd is not None:
+                try:
+                    cd.setValue(True)
+                    applied.append("create_directories")
+                except Exception:
+                    pass
 
         input_errors = {}
         for index, input_name in enumerate(params.get("inputs") or []):
@@ -74,9 +98,29 @@ def connect_nodes(params):
     from_node = _require_node(params["from_node"])
     to_node = _require_node(params["to_node"])
     input_index = int(params.get("input_index", 0))
+
+    auto_corrected = False
+    # B-pipe guardrail: when the first connection to a Merge-type node arrives
+    # at index 0 (A), silently route it to index 1 (B / background) instead.
+    # Only applies when B is currently unconnected; once B is wired, subsequent
+    # index-0 calls correctly target A.
+    if (to_node.Class() in _MERGE_CLASSES
+            and input_index == 0
+            and to_node.input(1) is None):
+        input_index = 1
+        auto_corrected = True
+
     with nuke.UndoGroup("NukeMCP: connect_nodes"):
         to_node.setInput(input_index, from_node)
-    return {"from_node": from_node.name(), "to_node": to_node.name(), "input_index": input_index}
+
+    result = {"from_node": from_node.name(), "to_node": to_node.name(), "input_index": input_index}
+    if auto_corrected:
+        result["auto_corrected"] = True
+        result["note"] = (
+            "routed to B (background) input -- "
+            "pass input_index=0 explicitly once B is connected to target A"
+        )
+    return result
 
 
 @register_handler("delete_node")

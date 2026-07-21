@@ -31,3 +31,27 @@ def register(mcp: FastMCP) -> None:
             node_name: name of the node to centre on.
         """
         return send_request("zoom_to_node", {"node_name": node_name})
+
+    @mcp.tool()
+    def viewer_playback(action: str, frame: int | None = None) -> dict:
+        """Control Viewer playback or navigate the timeline.
+
+        Actions:
+          - "play" / "forward": start forward playback.
+          - "backward": start reverse playback.
+          - "stop": halt playback.
+          - "next": advance one frame.
+          - "prev": step back one frame.
+          - "goto": jump to a specific frame (requires the `frame` argument).
+
+        Continuous play/stop relies on Nuke 13+ ViewerWindow API. Frame stepping
+        and goto always work regardless of Nuke version.
+
+        Args:
+            action: one of play, stop, next, prev, goto, forward, backward.
+            frame: destination frame for the "goto" action.
+        """
+        params: dict = {"action": action}
+        if frame is not None:
+            params["frame"] = frame
+        return send_request("viewer_playback", params)

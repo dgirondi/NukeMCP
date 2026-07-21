@@ -86,3 +86,68 @@ def zoom_to_node(params):
         pass  # zoom() may not work outside an interactive session; not fatal
 
     return {"node": node_name, "centered_at": [x, y]}
+
+
+@register_handler("viewer_playback")
+def viewer_playback(params):
+    """Control Viewer playback: play forward, stop, step one frame, or jump to a frame.
+
+    Continuous play/stop uses nuke.activeViewer() methods (Nuke 13+).
+    Frame stepping and goto are always reliable via nuke.frame().
+    """
+    action = str(params.get("action", "play")).lower()
+    first = int(nuke.root()["first_frame"].value())
+    last = int(nuke.root()["last_frame"].value())
+    viewer = nuke.activeViewer()
+
+    if action in ("play", "forward"):
+        if viewer is not None:
+            try:
+                viewer.play(1)
+            except (AttributeError, TypeError):
+                try:
+                    viewer.playForwards()
+                except (AttributeError, TypeError):
+                    pass
+
+    elif action in ("play_backward", "backward", "reverse"):
+        if viewer is not None:
+            try:
+                viewer.play(-1)
+            except (AttributeError, TypeError):
+                try:
+                    viewer.playBackwards()
+                except (AttributeError, TypeError):
+                    pass
+
+    elif action == "stop":
+        if viewer is not None:
+            try:
+                viewer.stop()
+            except AttributeError:
+                try:
+                    viewer.play(0)
+                except (AttributeError, TypeError):
+                    pass
+
+    elif action == "next":
+        current = min(int(nuke.frame()) + 1, last)
+        nuke.frame(current)
+
+    elif action == "prev":
+        current = max(int(nuke.frame()) - 1, first)
+        nuke.frame(current)
+
+    elif action == "goto":
+        frame = params.get("frame")
+        if frame is None:
+            raise ValueError("goto action requires a 'frame' parameter")
+        nuke.frame(int(frame))
+
+    else:
+        raise ValueError(
+            "unknown action {!r} -- use: play, stop, next, prev, goto, "
+            "forward, backward".format(action)
+        )
+
+    return {"action": action, "frame": int(nuke.frame())}
