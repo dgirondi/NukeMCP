@@ -7,7 +7,7 @@ This repo has two independent halves to install: the addon that runs inside Nuke
 Add the addon's directory to `NUKE_PATH` so Nuke auto-loads its `menu.py` at startup. In `~/.zshrc` (or wherever your shell's environment is configured):
 
 ```bash
-export NUKE_PATH="/Volumes/Vault/Projects/Dev/Nuke/NukeMCP/nuke_addon:$NUKE_PATH"
+export NUKE_PATH="/path/to/NukeMCP/nuke_addon:$NUKE_PATH"
 ```
 
 Restart your shell (or `source ~/.zshrc`), then launch Nuke. You should see a "NukeMCP" menu appear, and a line like this in the Script Editor / the terminal Nuke was launched from:
@@ -27,7 +27,7 @@ Two ways to do this — pick one.
 `server/` is packaged as a Claude Desktop Extension (`.mcpb` bundle, built with Anthropic's `@anthropic-ai/mcpb` packer). Build it once:
 
 ```bash
-cd /Volumes/Vault/Projects/Dev/Nuke/NukeMCP
+cd /path/to/NukeMCP
 npx @anthropic-ai/mcpb pack server nukemcp.mcpb
 ```
 
@@ -40,7 +40,7 @@ This only installs the **server-side** half — step 1 above (the Nuke addon + `
 Install [`uv`](https://docs.astral.sh/uv/) if you don't already have it (`brew install uv` on macOS), then:
 
 ```bash
-cd /Volumes/Vault/Projects/Dev/Nuke/NukeMCP/server
+cd /path/to/NukeMCP/server
 uv sync --extra dev
 ```
 
@@ -57,7 +57,7 @@ uv run nukemcp --help 2>&1 | head -1   # should start the server (Ctrl+C to stop
 **Claude Code:**
 
 ```bash
-claude mcp add nukemcp -- uv --directory /Volumes/Vault/Projects/Dev/Nuke/NukeMCP/server run nukemcp
+claude mcp add nukemcp -- uv --directory /path/to/NukeMCP/server run nukemcp
 ```
 
 **Claude Desktop / any client using a `claude_desktop_config.json`-style config:**
@@ -67,7 +67,7 @@ claude mcp add nukemcp -- uv --directory /Volumes/Vault/Projects/Dev/Nuke/NukeMC
   "mcpServers": {
     "nukemcp": {
       "command": "uv",
-      "args": ["--directory", "/Volumes/Vault/Projects/Dev/Nuke/NukeMCP/server", "run", "nukemcp"]
+      "args": ["--directory", "/path/to/NukeMCP/server", "run", "nukemcp"]
     }
   }
 }
