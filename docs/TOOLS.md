@@ -8,7 +8,8 @@ All tools that modify the script (create, edit, delete, connect, animate, batch)
 
 | Tool | Params | Returns |
 |---|---|---|
-| `get_script_info` | — | Root knobs: frame range, fps, format, script path, modified flag. Use `set_project_settings(current_frame=N)` to move the playhead |
+| `get_script_info` | — | Root knobs: frame range, fps, format, script path, modified flag |
+| `set_project_settings` | `first_frame?`, `last_frame?`, `fps?`, `format?`, `current_frame?` | Set any combination of Root-node project settings in one undoable call. Only provided params change |
 | `list_nodes` | `filter_class?: str`, `recurse_groups?: bool` | `name`, `class`, `xpos`/`ypos`, `selected` for every node |
 | `get_node_graph` | `filter_class?: str`, `recurse_groups?: bool` | Like `list_nodes`, plus `inputs` (connected node names by input index) and `outputs` |
 | `get_node_info` | `node_name: str` | Full knob dump for one node. Each knob reports `value`, `animated` (bool), and `expression` (text or null) |
