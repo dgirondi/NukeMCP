@@ -29,3 +29,7 @@ See [docs/TOOLS.md](docs/TOOLS.md).
 ## Security model
 
 See [docs/SECURITY.md](docs/SECURITY.md) — short version: loopback-only, no auth handshake, and one tool (`execute_nuke_code`) has full Nuke-API-plus-filesystem reach by design.
+
+## License
+
+[MIT License](LICENSE)
